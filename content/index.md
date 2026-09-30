@@ -1,6 +1,11 @@
 ---
-title: Welcome to Quartz
+title: Lillbuddy's blog
 ---
 
-This is a blank Quartz installation.
-See the [documentation](https://quartz.jzhao.xyz) for how to get started.
+歡迎來到 Lillbuddy's blog 👋
+
+這裡會放一些隨手寫下的文章、讀書和生活的心得分享。想到什麼就寫什麼，不定期更新。
+
+## 最近的文章
+
+- [[第一篇文章]]
