@@ -32,3 +32,153 @@ footer {
 footer ul:empty {
   display: none;
 }
+
+// ===== 左右欄收合（B 方案）=====
+// 平常兩側欄都收起來，只顯示文章；點左上／右上角的按鈕才拉出來。
+// 電腦、平板、手機都適用。按鈕的程式在 custom/sidebar-toggle.js（由 quartz.ts 載入）。
+
+// 側欄拉出來時的寬度（手機上最多佔畫面 85%）
+:root {
+  --drawer-width: min(320px, 85vw);
+}
+
+// 版面：只留中間的文章欄（最寬 750px、置中），頁尾貼在最底部
+.page > #quartz-body {
+  grid-template-columns: 1fr minmax(0, 750px) 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "grid-sidebar-left grid-header grid-sidebar-right"
+    "grid-sidebar-left grid-center grid-sidebar-right"
+    "grid-sidebar-left grid-footer grid-sidebar-right";
+  column-gap: 0;
+  min-height: 100vh;
+}
+.page > #quartz-body .center {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+// 側欄：變成從左右兩邊拉出來的抽屜
+#quartz-root #quartz-body .sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  height: auto;
+  width: var(--drawer-width);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.2rem;
+  margin: 0;
+  padding: 2rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  background-color: var(--background-secondary, var(--light));
+  transition: left 0.25s ease, right 0.25s ease, box-shadow 0.25s ease;
+}
+#quartz-root #quartz-body .sidebar > * {
+  flex: 0 0 auto;
+  max-height: none;
+}
+#quartz-root #quartz-body .sidebar .spacer {
+  display: none;
+}
+#quartz-root #quartz-body .sidebar.left {
+  left: calc(-1 * var(--drawer-width));
+  right: auto;
+}
+#quartz-root #quartz-body .sidebar.right {
+  right: calc(-1 * var(--drawer-width));
+  left: auto;
+}
+html[data-sidebar-left="open"] #quartz-root #quartz-body .sidebar.left {
+  left: 0;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
+}
+html[data-sidebar-right="open"] #quartz-root #quartz-body .sidebar.right {
+  right: 0;
+  box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
+}
+
+// 左上、右上角的開關按鈕
+.sidebar-toggle {
+  position: fixed;
+  top: 1rem;
+  z-index: 60;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--lightgray);
+  border-radius: 8px;
+  background: var(--light);
+  color: var(--darkgray);
+  cursor: pointer;
+  transition: left 0.25s ease, right 0.25s ease, background-color 0.2s;
+}
+.sidebar-toggle:hover {
+  background: var(--lightgray);
+}
+.sidebar-toggle.left {
+  left: 1rem;
+}
+.sidebar-toggle.right {
+  right: 1rem;
+}
+html[data-sidebar-left="open"] .sidebar-toggle.left {
+  left: calc(var(--drawer-width) + 0.75rem);
+}
+html[data-sidebar-right="open"] .sidebar-toggle.right {
+  right: calc(var(--drawer-width) + 0.75rem);
+}
+
+// 手機：文章上方留空間給按鈕；左側欄裡的「探索」直接列出文章
+@media (max-width: 800px) {
+  .page > #quartz-body .page-header {
+    margin-top: 4rem;
+  }
+  // 畫面太窄，一邊拉出來時先把另一邊的按鈕藏起來
+  html[data-sidebar-left="open"] .sidebar-toggle.right,
+  html[data-sidebar-right="open"] .sidebar-toggle.left {
+    visibility: hidden;
+  }
+  #quartz-root #quartz-body .sidebar.left .page-title {
+    display: block;
+  }
+  #quartz-root #quartz-body .sidebar.left .explorer {
+    order: 0;
+    align-self: stretch;
+    margin: 0;
+    height: auto;
+    overflow-y: hidden;
+  }
+  #quartz-root #quartz-body .sidebar.left .explorer:not(.collapsed) {
+    flex: 0 0 auto;
+  }
+  #quartz-root #quartz-body .sidebar.left .explorer.collapsed {
+    flex: 0 0 1.5rem;
+  }
+  #quartz-root #quartz-body .sidebar.left .explorer button.mobile-explorer {
+    display: none;
+  }
+  #quartz-root #quartz-body .sidebar.left .explorer button.desktop-explorer {
+    display: flex;
+  }
+  #quartz-root #quartz-body .sidebar.left .explorer .explorer-content {
+    position: static;
+    transform: none;
+    visibility: visible;
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    margin-top: 0.5rem;
+    padding: 0;
+    background-color: transparent;
+    z-index: auto;
+    transition: none;
+  }
+}
