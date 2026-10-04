@@ -1,5 +1,9 @@
 import { readFileSync } from "fs"
 import { loadQuartzConfig, loadQuartzLayout } from "./quartz/plugins/loader/config-loader"
+import { registerCondition } from "./quartz/plugins/loader/conditions"
+
+// 自訂顯示條件：只在首頁顯示（quartz.config.yaml 的「最新文章」用 condition: index）
+registerCondition("index", (props) => props.fileData.slug === "index")
 
 const config = await loadQuartzConfig()
 

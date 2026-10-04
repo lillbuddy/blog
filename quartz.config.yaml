@@ -13,33 +13,35 @@ configuration:
     - templates
     - .obsidian
   theme:
-    fontOrigin: googleFonts
+    # 字體改由下方 quartz-fonts 外掛載入（思源宋體沒有斜體，用這裡的設定會載入失敗）
+    fontOrigin: local
     cdnCaching: true
     typography:
-      header: Schibsted Grotesk
-      body: Source Sans Pro
+      header: Noto Serif TC
+      body: Noto Serif TC
       code: IBM Plex Mono
+    # 配色「紙與墨」：米白紙張底、墨色文字、朱紅點綴
     colors:
       lightMode:
-        light: "#faf8f8"
-        lightgray: "#e5e5e5"
-        gray: "#b8b8b8"
-        darkgray: "#4e4e4e"
-        dark: "#2b2b2b"
-        secondary: "#284b63"
-        tertiary: "#84a59d"
-        highlight: rgba(143, 159, 169, 0.15)
-        textHighlight: "#fff23688"
+        light: "#f7f4ee"
+        lightgray: "#e6dfd3"
+        gray: "#a0978a"
+        darkgray: "#3a3631"
+        dark: "#1f1c19"
+        secondary: "#a8452a"
+        tertiary: "#a07a4a"
+        highlight: rgba(168, 69, 42, 0.08)
+        textHighlight: "#f2d58a99"
       darkMode:
-        light: "#161618"
-        lightgray: "#393639"
-        gray: "#646464"
-        darkgray: "#d4d4d4"
-        dark: "#ebebec"
-        secondary: "#7b97aa"
-        tertiary: "#84a59d"
-        highlight: rgba(143, 159, 169, 0.15)
-        textHighlight: "#b3aa0288"
+        light: "#1b1a17"
+        lightgray: "#33302a"
+        gray: "#7f786d"
+        darkgray: "#d8d2c6"
+        dark: "#f0ebe1"
+        secondary: "#e48b69"
+        tertiary: "#c9a46f"
+        highlight: rgba(228, 139, 105, 0.12)
+        textHighlight: "#b8862b66"
 plugins:
   - source: "@quartz-community/created-modified-date"
     enabled: true
@@ -110,8 +112,26 @@ plugins:
     order: 92
   - source: "@quartz-community/quartz-fonts"
     enabled: true
+    options:
+      fontOrigin: googleFonts
+      useThemeFonts: false
+      title:
+        name: Noto Serif TC
+        weights: [700]
+      header:
+        name: Noto Serif TC
+        weights: [700]
+      body:
+        name: Noto Serif TC
+        weights: [400, 700]
+        includeItalic: false
+      code:
+        name: IBM Plex Mono
+        weights: [400, 600]
+        includeItalic: false
+  # Obsidian 主題關閉：讓上面的配色、字體和 quartz/styles/custom.scss 完整生效
   - source: "@quartz-themes/core"
-    enabled: true
+    enabled: false
     options:
       theme: default
       mode: both
@@ -201,7 +221,7 @@ plugins:
   - source: "@quartz-community/page-title"
     enabled: true
     layout:
-      position: left
+      position: header
       priority: 10
   - source: "@quartz-community/darkmode"
     enabled: true
@@ -217,6 +237,10 @@ plugins:
       group: toolbar
   - source: "@quartz-community/breadcrumbs"
     enabled: true
+    options:
+      rootName: 首頁
+      spacerSymbol: /
+      showCurrentPage: false
     layout:
       position: beforeBody
       priority: 5
@@ -237,7 +261,17 @@ plugins:
       position: footer
       priority: 50
   - source: "@quartz-community/recent-notes"
-    enabled: false
+    enabled: true
+    options:
+      title: 最新文章
+      limit: 10
+      showTags: true
+      hideTagPages: true
+      hideFolderPages: true
+    layout:
+      position: afterBody
+      priority: 10
+      condition: index
   - source: "@quartz-community/spacer"
     enabled: true
     options: {}
@@ -257,7 +291,6 @@ plugins:
       includedProperties:
         - description
         - tags
-        - aliases
       excludedProperties: []
       hidePropertiesView: false
       delimiters: ---

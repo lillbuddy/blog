@@ -1,50 +1,76 @@
+@use "sass:list";
 @use "./variables.scss" as *;
 
-// put your custom CSS here!
+// =====================================================================
+// Lillbuddy's blog ——「紙與墨」
+// 米白紙張底、墨色文字、朱紅點綴；標題與內文用思源宋體，介面文字用系統黑體。
+// 顏色本身在 quartz.config.yaml 的 colors，這裡負責字體、排版和版面。
+// =====================================================================
 
-// 圖譜框高度：250px → 180px
-.graph > .graph-outer {
-  height: 180px;
+// 彎引號（’ “ ”）用西文字體，不然中文字體會把 Lillbuddy’s 排成全形、中間空一大格
+@font-face {
+  font-family: "Latin Quotes";
+  src: local("Georgia"), local("Times New Roman"), local("Noto Serif"), local("DejaVu Serif");
+  unicode-range: U+2018-2019, U+201C-201D;
 }
 
-// 反向連結清單裡的文章名稱不要粗體
-.backlinks ul li a {
-  font-weight: normal;
-}
-
-// 三欄頂端留白：6rem → 2rem，三欄第一行對齊（手機版不受影響）
-@media (min-width: 800px) {
-  .page > #quartz-body .sidebar { padding-top: 2rem; }
-  .page > #quartz-body .page-header { margin-top: 2rem; }
-  .page > #quartz-body .sidebar.right .graph > h3 { margin-top: 0; }
-}
-
-// 頁尾：固定在畫面最底端（電腦版）
-@media all and ($desktop) {
-  .page > #quartz-body {
-    min-height: 100vh;
-    grid-template-rows: auto 1fr auto;
-  }
-}
-footer {
-  margin-bottom: 1rem;
-}
-footer ul:empty {
-  display: none;
-}
-
-// ===== 左右欄收合（B 方案）=====
-// 平常兩側欄都收起來，只顯示文章；點左上／右上角的按鈕才拉出來。
-// 電腦、平板、手機都適用。按鈕的程式在 custom/sidebar-toggle.js（由 quartz.ts 載入）。
-
-// 側欄拉出來時的寬度（手機上最多佔畫面 85%）
+// ---------- 設計變數 ----------
 :root {
-  --drawer-width: min(320px, 85vw);
+  --serif: "Latin Quotes", "Noto Serif TC", "Source Han Serif TC", "Songti TC", "PMingLiU", serif;
+  --sans: system-ui, -apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --titleFont: var(--serif);
+  --headerFont: var(--serif);
+  --bodyFont: var(--serif);
+  --codeFont: var(--mono);
+
+  --muted: #6e665c; // 次要文字：日期、說明、側欄標題
+  --paper-2: #efeae1; // 稍深一階的紙色：側欄、程式碼、callout
+  --rule: var(--lightgray); // 細線
+  --measure: 680px; // 文章欄寬（約 38 個中文字一行）
+  --drawer-width: min(320px, 85vw); // 側欄拉出來時的寬度（手機上最多佔畫面 85%）
+}
+:root[saved-theme="dark"] {
+  --muted: #a39b8f;
+  --paper-2: #23211d;
 }
 
-// 版面：只留中間的文章欄（最寬 750px、置中），頁尾貼在最底部
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: color-mix(in srgb, var(--secondary) 22%, transparent);
+  color: var(--dark);
+}
+a {
+  font-weight: inherit;
+}
+a.internal:not(.tag-link) {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  line-height: inherit;
+}
+strong {
+  font-weight: 700;
+  color: var(--dark);
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  color: var(--dark);
+}
+
+// ===== 版面 =====
+// 只留中間的文章欄（置中），左右側欄平常收起來，點左上／右上角的按鈕才拉出來。
+// 按鈕的程式在 custom/sidebar-toggle.js（由 quartz.ts 載入）。
 .page > #quartz-body {
-  grid-template-columns: 1fr minmax(0, 750px) 1fr;
+  grid-template-columns: 1fr minmax(0, var(--measure)) 1fr;
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
     "grid-sidebar-left grid-header grid-sidebar-right"
@@ -58,7 +84,578 @@ footer ul:empty {
   grid-row: 1;
 }
 
-// 側欄：變成從左右兩邊拉出來的抽屜
+// ---------- 刊頭：網站名稱（和左右上角的按鈕同一列）----------
+.page > #quartz-body .page-header {
+  margin: 0;
+}
+.page-header > header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0 0;
+  min-height: 36px;
+  padding: 0 3.25rem 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.page-header > header .page-title {
+  flex: none;
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  line-height: 36px;
+
+  & a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--dark);
+    &:hover {
+      color: var(--secondary);
+    }
+    // 朱紅小印章
+    &::before {
+      content: "";
+      width: 0.62em;
+      height: 0.62em;
+      border-radius: 2px;
+      background: var(--secondary);
+      transform: rotate(45deg);
+    }
+  }
+}
+
+// ---------- 文章開頭：麵包屑、標題、摘要、標籤、日期 ----------
+.page-header > .popover-hint {
+  padding-bottom: 1.75rem;
+  margin-bottom: 2.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+.breadcrumb-container {
+  margin: 2.25rem 0 0;
+  gap: 0.4rem;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+
+  & .breadcrumb-element a {
+    color: var(--muted);
+    &:hover {
+      color: var(--secondary);
+    }
+  }
+  & .breadcrumb-element p {
+    margin-left: 0.4rem;
+    color: var(--gray);
+  }
+}
+.article-title {
+  margin: 0.6rem 0 0;
+  font-size: 2.15rem;
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+}
+.breadcrumb-container + .article-title {
+  margin-top: 0.5rem;
+}
+.page-header > .popover-hint > .article-title:first-child {
+  margin-top: 2.5rem;
+}
+
+// 筆記屬性（description、tags）不用表格：description 當成摘要、tags 變成小標籤
+.page-header .note-properties {
+  margin: 0.9rem 0 0;
+  border: none;
+  font-size: 1rem;
+
+  & > .note-properties-header,
+  & .note-properties-key,
+  & .note-properties-separator {
+    display: none;
+  }
+  & .note-properties-table,
+  & tbody,
+  & tr,
+  & td {
+    display: block;
+  }
+  & .note-properties-row {
+    border: none;
+  }
+  & .note-properties-value {
+    padding: 0;
+  }
+  & .note-properties-text {
+    display: block;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--muted);
+  }
+  & .note-properties-row:has(.note-properties-tags) {
+    margin-top: 1rem;
+  }
+  & .note-properties-tags {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+}
+
+.content-meta {
+  margin: 1rem 0 0;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+
+  &[show-comma="true"] > :not(:last-child) {
+    margin-right: 0.6rem;
+    &::after {
+      content: "·";
+      margin-left: 0.6rem;
+      color: var(--gray);
+    }
+  }
+}
+
+// 標籤：小圓角外框
+a.tag-link,
+.note-properties .note-properties-tags a.tag-link {
+  display: inline-block;
+  padding: 0.12rem 0.65rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  transition:
+    color 0.2s,
+    border-color 0.2s,
+    background-color 0.2s;
+
+  &::before {
+    color: var(--secondary);
+    margin-right: 0.1em;
+  }
+  &:hover {
+    color: var(--secondary);
+    border-color: color-mix(in srgb, var(--secondary) 45%, transparent);
+    background: var(--highlight);
+  }
+}
+
+// ---------- 內文 ----------
+article {
+  font-size: 1.0625rem;
+  letter-spacing: 0.02em;
+
+  & p,
+  & li,
+  & tbody {
+    line-height: 1.95;
+  }
+  & p {
+    margin: 0 0 1.2em;
+    text-align: justify;
+  }
+  & h2 {
+    margin: 2.75rem 0 1rem;
+    font-size: 1.45rem;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+  }
+  & h3 {
+    margin: 2.1rem 0 0.75rem;
+    font-size: 1.2rem;
+    line-height: 1.5;
+  }
+  & h4,
+  & h5,
+  & h6 {
+    margin: 1.75rem 0 0.5rem;
+    font-size: 1.05rem;
+  }
+
+  // 連結：朱紅色、細底線
+  & a:not(.tag-link):not([role="anchor"]):not(:has(> img)) {
+    color: var(--secondary);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.28em;
+    text-decoration-color: color-mix(in srgb, var(--secondary) 35%, transparent);
+    transition: text-decoration-color 0.2s;
+    &:hover {
+      color: var(--secondary);
+      text-decoration-color: currentColor;
+    }
+  }
+
+  // 引言
+  & blockquote:not(.callout) {
+    margin: 1.75rem 0;
+    padding: 0.1rem 0 0.1rem 1.25rem;
+    border-left: 2px solid var(--secondary);
+    & p {
+      margin: 0.4em 0;
+      color: var(--muted);
+    }
+  }
+
+  // 清單
+  & ul,
+  & ol {
+    padding-left: 1.5em;
+    margin: 0 0 1.2em;
+  }
+  & li {
+    margin: 0.2em 0;
+  }
+  & li::marker {
+    color: var(--secondary);
+  }
+  & ol > li::marker {
+    font-family: var(--sans);
+    font-size: 0.9em;
+  }
+
+  // 圖片：置中、圓角、直式照片不會長到一個畫面放不下
+  & img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 80vh;
+    margin: 2rem auto;
+    border-radius: 6px;
+  }
+
+  // 表格
+  & .table-container > table {
+    width: 100%;
+    margin: 1.75rem 0;
+    padding: 0;
+    font-size: 0.95em;
+  }
+  & thead {
+    font-family: var(--sans);
+  }
+  & th {
+    padding: 0.5rem 0.8rem;
+    border-bottom: 1.5px solid var(--dark);
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+  & td {
+    padding: 0.5rem 0.8rem;
+  }
+  & tr {
+    border-bottom: 1px solid var(--rule);
+  }
+}
+
+// 螢光筆（==文字==）：只畫下半截，像真的螢光筆
+.text-highlight {
+  padding: 0 0.1em;
+  border-radius: 0;
+  background: linear-gradient(transparent 55%, var(--textHighlight) 55%);
+}
+
+// 分隔線：改成置中的三個點；文章最後也會出現，當作結尾記號
+hr {
+  height: auto;
+  margin: 3rem auto;
+  border: none;
+  background: none;
+  overflow: visible;
+  text-align: center;
+  &::after {
+    content: "· · ·";
+    font-size: 1.1rem;
+    letter-spacing: 0.6em;
+    color: var(--gray);
+  }
+}
+
+// 程式碼
+code {
+  padding: 0.12em 0.35em;
+  border-radius: 4px;
+  background: var(--paper-2);
+  font-size: 0.86em;
+  letter-spacing: 0;
+}
+pre {
+  margin: 1.5rem 0;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--paper-2);
+  & > code {
+    background: none;
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+}
+
+// 註腳
+.footnotes {
+  margin-top: 3rem;
+  font-size: 0.9em;
+  border-top-color: var(--rule);
+}
+
+// ---------- Callout：淡底色 + 左邊色條，顏色調得比較沉穩 ----------
+.callout {
+  margin: 1.75rem 0;
+  padding: 0.15rem 1.25rem;
+  border: none;
+  border-left: 3px solid var(--color);
+  border-radius: 2px 8px 8px 2px;
+  background: color-mix(in srgb, var(--color) 7%, var(--light));
+
+  & .callout-title {
+    padding: 0.85rem 0 0.35rem;
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    letter-spacing: 0.04em;
+    color: var(--color);
+  }
+  & .callout-title-inner > p {
+    margin: 0;
+    line-height: 1.5;
+    color: var(--color);
+  }
+  & .callout-content p {
+    color: var(--darkgray);
+  }
+  & > .callout-content > :last-child {
+    margin-bottom: 0.85rem;
+  }
+}
+.callout.is-collapsed > .callout-title {
+  padding-bottom: 0.85rem;
+}
+// 每種 callout 的顏色：（亮色模式, 暗色模式）
+$callout-colors: (
+  "note": (
+    #4a6f94,
+    #8fb3d9,
+  ),
+  "abstract": (
+    #3f7f8f,
+    #86c2cf,
+  ),
+  "info": (
+    #3f7f8f,
+    #86c2cf,
+  ),
+  "todo": (
+    #3f7f8f,
+    #86c2cf,
+  ),
+  "tip": (
+    #4f7d63,
+    #8cc4a3,
+  ),
+  "success": (
+    #5a7d3f,
+    #a3c98a,
+  ),
+  "question": (
+    #a0702c,
+    #dcb170,
+  ),
+  "warning": (
+    #a8701a,
+    #e3b25f,
+  ),
+  "failure": (
+    #a8452a,
+    #e48b69,
+  ),
+  "danger": (
+    #a8452a,
+    #e48b69,
+  ),
+  "bug": (
+    #a8452a,
+    #e48b69,
+  ),
+  "example": (
+    #6f5a96,
+    #b39ddb,
+  ),
+  "quote": (
+    #7d756a,
+    #a39b8f,
+  ),
+);
+.callout[data-callout] {
+  --color: #4a6f94;
+}
+:root[saved-theme="dark"] .callout[data-callout] {
+  --color: #8fb3d9;
+}
+@each $name, $pair in $callout-colors {
+  .callout[data-callout="#{$name}"] {
+    --color: #{list.nth($pair, 1)};
+  }
+  :root[saved-theme="dark"] .callout[data-callout="#{$name}"] {
+    --color: #{list.nth($pair, 2)};
+  }
+}
+
+// ---------- 文章清單（首頁「最新文章」、資料夾頁、標籤頁）----------
+.recent-notes > h3,
+.page-listing > p {
+  margin: 0 0 0.5rem;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+}
+.page-listing > p {
+  letter-spacing: 0.05em;
+}
+.recent-notes > ul.recent-ul,
+ul.section-ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.recent-notes > ul.recent-ul > li,
+li.section-li {
+  margin: 0;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.recent-notes > ul.recent-ul > li:last-child,
+li.section-li:last-child {
+  border-bottom: none;
+}
+// 404 頁不需要出現在最新文章裡
+.recent-notes li:has(a[href$="404"]) {
+  display: none;
+}
+.recent-notes > ul.recent-ul > li .section,
+li.section-li > .section {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  grid-template-areas:
+    "meta desc"
+    ". tags";
+  column-gap: 1rem;
+  align-items: baseline;
+
+  & > .meta {
+    grid-area: meta;
+    margin: 0;
+    opacity: 1;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  & > .desc {
+    grid-area: desc;
+  }
+  & > .desc h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    & a {
+      color: var(--dark);
+      &:hover {
+        color: var(--secondary);
+      }
+    }
+  }
+  & > ul.tags {
+    grid-area: tags;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+    &:empty {
+      display: none;
+    }
+  }
+}
+
+// ---------- 首頁：刊頭放大成封面 ----------
+body[data-slug="index"] {
+  & .page-header > header {
+    margin-top: 5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  & .page-header > header .page-title {
+    font-size: 2.4rem;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    & a {
+      gap: 0.9rem;
+    }
+    & a::before {
+      width: 0.42em;
+      height: 0.42em;
+    }
+  }
+  & .page-header > .popover-hint {
+    margin-bottom: 2.5rem;
+    padding-bottom: 0;
+    border-bottom: none;
+    & > .article-title,
+    & > .content-meta,
+    & > .note-properties {
+      display: none;
+    }
+  }
+  & article {
+    text-align: center;
+    & h2,
+    & ul,
+    & ol {
+      text-align: left;
+    }
+    & p {
+      text-align: center;
+      color: var(--muted);
+    }
+  }
+}
+
+// ---------- 頁尾 ----------
+footer {
+  margin: 1rem 0 0;
+  padding: 1.5rem 0 2rem;
+  border-top: 1px solid var(--rule);
+  opacity: 1;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+
+  & p {
+    margin: 0;
+    color: var(--muted);
+  }
+  & a {
+    color: var(--muted);
+    &:hover {
+      color: var(--secondary);
+    }
+  }
+  & ul:empty {
+    display: none;
+  }
+}
+
+// ===== 左右側欄：從兩邊拉出來的抽屜 =====
 #quartz-root #quartz-body .sidebar {
   position: fixed;
   top: 0;
@@ -69,13 +666,17 @@ footer ul:empty {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 1.2rem;
+  gap: 1.75rem;
   margin: 0;
-  padding: 2rem;
+  padding: 1.75rem 1.5rem 2rem;
   box-sizing: border-box;
   overflow-y: auto;
-  background-color: var(--background-secondary, var(--light));
-  transition: left 0.25s ease, right 0.25s ease, box-shadow 0.25s ease;
+  background-color: var(--paper-2);
+  font-family: var(--sans);
+  transition:
+    left 0.25s ease,
+    right 0.25s ease,
+    box-shadow 0.25s ease;
 }
 #quartz-root #quartz-body .sidebar > * {
   flex: 0 0 auto;
@@ -87,21 +688,99 @@ footer ul:empty {
 #quartz-root #quartz-body .sidebar.left {
   left: calc(-1 * var(--drawer-width));
   right: auto;
+  border-right: 1px solid var(--rule);
 }
 #quartz-root #quartz-body .sidebar.right {
   right: calc(-1 * var(--drawer-width));
   left: auto;
+  border-left: 1px solid var(--rule);
 }
 html[data-sidebar-left="open"] #quartz-root #quartz-body .sidebar.left {
   left: 0;
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.12);
 }
 html[data-sidebar-right="open"] #quartz-root #quartz-body .sidebar.right {
   right: 0;
-  box-shadow: 0 0 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.12);
 }
 
-// 左上、右上角的開關按鈕
+// 側欄裡的小標題（探索、目錄、關係圖譜、反向連結）
+.sidebar .explorer button.desktop-explorer h2,
+.sidebar .toc button.toc-header h3,
+.sidebar .graph > h3,
+.sidebar .backlinks > h3 {
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+.sidebar .explorer button.desktop-explorer,
+.sidebar .toc button.toc-header {
+  color: var(--muted);
+}
+
+// 搜尋框
+.search > .search-button {
+  height: 2.25rem;
+  border-color: var(--rule);
+  border-radius: 8px;
+  background-color: var(--light);
+  font-family: var(--sans);
+  font-size: 0.9rem;
+}
+
+// 探索（文章目錄樹）
+.sidebar .explorer {
+  font-size: 0.92rem;
+  & .explorer-ul li > a {
+    color: var(--darkgray);
+    &:hover,
+    &.active {
+      color: var(--secondary);
+    }
+  }
+  & .folder-container div > button span,
+  & .folder-container div > a {
+    font-family: var(--sans);
+    font-size: 0.92rem;
+    color: var(--dark);
+  }
+  & .folder-icon {
+    color: var(--gray);
+  }
+}
+
+// 本頁目錄
+.sidebar ul.toc-content.overflow > li > a {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--darkgray);
+  opacity: 0.55;
+  &.in-view {
+    color: var(--secondary);
+    opacity: 1;
+  }
+}
+
+// 關係圖譜
+.graph > .graph-outer {
+  height: 180px;
+  border-color: var(--rule);
+  border-radius: 8px;
+  background: var(--light);
+}
+
+// 反向連結
+.backlinks ul li a {
+  font-weight: normal;
+  color: var(--darkgray);
+  &:hover {
+    color: var(--secondary);
+  }
+}
+
+// ---------- 左上、右上角的開關按鈕 ----------
 .sidebar-toggle {
   position: fixed;
   top: 1rem;
@@ -112,15 +791,22 @@ html[data-sidebar-right="open"] #quartz-root #quartz-body .sidebar.right {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--lightgray);
-  border-radius: 8px;
-  background: var(--light);
-  color: var(--darkgray);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--light) 82%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--muted);
   cursor: pointer;
-  transition: left 0.25s ease, right 0.25s ease, background-color 0.2s;
+  transition:
+    left 0.25s ease,
+    right 0.25s ease,
+    color 0.2s,
+    background-color 0.2s;
 }
 .sidebar-toggle:hover {
-  background: var(--lightgray);
+  color: var(--secondary);
+  background: var(--light);
 }
 .sidebar-toggle.left {
   left: 1rem;
@@ -135,19 +821,52 @@ html[data-sidebar-right="open"] .sidebar-toggle.right {
   right: calc(var(--drawer-width) + 0.75rem);
 }
 
-// 手機：文章上方留空間給按鈕；左側欄裡的「探索」直接列出文章
+// ===== 手機 =====
 @media (max-width: 800px) {
-  .page > #quartz-body .page-header {
-    margin-top: 4rem;
+  article {
+    font-size: 1rem;
+    & p,
+    & li {
+      line-height: 1.9;
+    }
+    & h2 {
+      font-size: 1.3rem;
+    }
   }
+  .article-title {
+    font-size: 1.7rem;
+  }
+  .breadcrumb-container {
+    margin-top: 1.75rem;
+  }
+  body[data-slug="index"] {
+    & .page-header > header {
+      margin-top: 3.5rem;
+    }
+    & .page-header > header .page-title {
+      font-size: 1.9rem;
+    }
+  }
+  .recent-notes > ul.recent-ul > li .section,
+  li.section-li > .section {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "meta"
+      "desc"
+      "tags";
+    row-gap: 0.15rem;
+  }
+  li.section-li > .section > .tags {
+    display: flex;
+  }
+
   // 畫面太窄，一邊拉出來時先把另一邊的按鈕藏起來
   html[data-sidebar-left="open"] .sidebar-toggle.right,
   html[data-sidebar-right="open"] .sidebar-toggle.left {
     visibility: hidden;
   }
-  #quartz-root #quartz-body .sidebar.left .page-title {
-    display: block;
-  }
+
+  // 左側欄裡的「探索」直接列出文章
   #quartz-root #quartz-body .sidebar.left .explorer {
     order: 0;
     align-self: stretch;
@@ -179,6 +898,13 @@ html[data-sidebar-right="open"] .sidebar-toggle.right {
     padding: 0;
     background-color: transparent;
     z-index: auto;
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #quartz-root #quartz-body .sidebar,
+  .sidebar-toggle {
     transition: none;
   }
 }
